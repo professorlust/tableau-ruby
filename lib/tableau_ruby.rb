@@ -1,5 +1,7 @@
 $:.unshift File.dirname(__FILE__)
 
+require 'nokogiri'
+require 'faraday'
 require 'faraday_middleware'
 require 'faraday_middleware/multi_json'
 

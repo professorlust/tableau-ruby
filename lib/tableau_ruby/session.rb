@@ -1,6 +1,7 @@
 module Tableau
   class Session
-    API_URL = "https://tabdev.traxtech.com"
+    API_URL = "https://tabdev.traxtech.com/api/2.0/"
+    attr_accessor :site_id, :user_id, :token, :user
 
     #{username, user_id, password, site}
     def initialize(user)
@@ -26,7 +27,7 @@ module Tableau
           end
         end
       end
-      resp = http_request("/api/2.0/auth/signin", builder.to_xml, "post")
+      resp = http_request("/auth/signin", builder.to_xml, "post")
       if resp.status == 200
         return Nokogiri::XML(resp.body).css("tsResponse credentials").first[:token]
       else
@@ -35,11 +36,11 @@ module Tableau
     end
 
     def sign_out
-      http_request("/api/2.0/auth/signout", nil, "post")
+      http_request("/auth/signout", nil, "post")
     end
 
     def get_site_id
-      resp = http_request("/api/2.0/sites/#{@site_name}?key=name",nil,"get")
+      resp = http_request("/sites/#{@site_name}?key=name",nil,"get")
       if resp.status == 200
         return Nokogiri::XML(resp.body).css("tsResponse site").first[:id]
       else
@@ -47,12 +48,8 @@ module Tableau
       end
     end
 
-    def get_users
-      http_request("/api/2.0/sites/#{@site_id}/users/", nil, "get")
-    end
-
     def get_user_id
-      resp = http_request("/api/2.0/sites/#{@site_id}/users/", nil, "get")
+      resp = http_request("/sites/#{@site_id}/users/", nil, "get")
       if resp.status == 200
         return Nokogiri::XML(resp.body).css("tsResponse users user[name='#{@user[:user_id]}']").first[:id]
       else
