@@ -13,9 +13,8 @@ module Tableau
     end
 
     # <tsRequest>
-    #   <credentials name="admin-username" password="admin-password" >
-    #     <site contentUrl="target-site-content-URL" />
-    #     <user id="user-to-run-as" />
+    #   <credentials name="<username>" password="<password>" >
+    #     <site contentUrl="" />
     #   </credentials>
     # </tsRequest>
     def sign_in(user)
@@ -40,7 +39,7 @@ module Tableau
     end
 
     def get_site_id
-      resp = http_request("/sites/#{@site_name}?key=name",nil,"get")
+      resp = http_request("/sites/#{@site_name.gsub(' ', '%20')}?key=name",nil,"get")
       if resp.status == 200
         return Nokogiri::XML(resp.body).css("tsResponse site").first[:id]
       else
