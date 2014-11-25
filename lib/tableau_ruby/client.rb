@@ -1,6 +1,6 @@
 module Tableau
   class Client
-    attr_reader :conn, :projects, :sites, :site_id, :site_name, :token, :user, :user_id
+    attr_reader :conn, :projects, :sites, :site_id, :site_name, :token, :user, :user_id, :workbooks
 
     #{username, user_id, password, site}
     def initialize(user)
@@ -11,7 +11,7 @@ module Tableau
 
       @token = sign_in(user)
       @site_id = get_site_id
-      @user_id = get_user_id
+      @user_id = user[:user_id].blank? ? nil : get_user_id
 
       setup_subresources
     end
@@ -39,7 +39,7 @@ module Tableau
     private
 
     def setup_subresources
-      @user      = Tableau::User.new(self)
+      @user      = Tableau::User.new(self, @user_id)
       @projects  = Tableau::Project.new(self)
       @sites     = Tableau::Site.new(self)
       @workbooks = Tableau::Workbook.new(self)
