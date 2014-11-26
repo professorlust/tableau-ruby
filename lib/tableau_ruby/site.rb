@@ -11,8 +11,7 @@ module Tableau
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       data = {sites: []}
-      doc = Nokogiri::XML(resp.body)
-      doc.css("tsResponse sites site").each do |s|
+      Nokogiri::XML(resp.body).css("tsResponse sites site").each do |s|
         s.css("project").each do |p|
           (@projects ||= []) << {id: p["id"], name: p["name"]}
         end
@@ -36,8 +35,7 @@ module Tableau
         params.each {|k,v| req.params[k] = v}
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-
-      puts resp.body
+      normalize_json(resp.body)
     end
 
     def find_by_site_name(site_name, params={})
@@ -46,8 +44,7 @@ module Tableau
         params.each {|k,v| req.params[k] = v}
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-
-      puts resp.body
+      normalize_json(resp.body)
     end
 
     def find_by_site_url_namespace(site_url_namespace, params={})
@@ -56,8 +53,7 @@ module Tableau
         params.each {|k,v| req.params[k] = v}
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-
-      puts resp.body
+      normalize_json(resp.body)
     end
 
     def create(payload)
@@ -65,8 +61,7 @@ module Tableau
         req.payload payload
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-
-      puts resp.body
+      normalize_json(resp.body)
     end
 
     def update(site_id, payload)
@@ -74,8 +69,7 @@ module Tableau
         req.payload payload
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-
-      puts resp.body
+      normalize_json(resp.body)
     end
 
     def delete(site_id, params={})
@@ -83,8 +77,26 @@ module Tableau
         params.each {|k,v| req.params[k] = v}
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
+      normalize_json(resp.body)
+    end
 
-      puts resp.body
+    private
+
+    def normalize_json(r)
+      data = {}
+      Nokogiri::XML(r).css("tsResponse site").each do |s|
+        data[:site] = {
+          name: "#{s['name']}",
+          id: "#{s['id']}",
+          content_url: "#{s['contentUrl']}",
+          admin_mode: "#{s['adminMode']}",
+          user_quota: "#{s['userQuota']}",
+          storage_quota: "#{s['storageQuota']}",
+          state: "#{s['state']}",
+          status_reason: "#{s['statusReason']}"
+        }
+      end
+      data.to_json
     end
   end
 end
