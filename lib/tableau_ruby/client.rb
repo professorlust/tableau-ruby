@@ -11,7 +11,7 @@ module Tableau
 
       @token = sign_in(user)
       @site_id = get_site_id
-      @user_id = user[:user_id].blank? ? nil : get_user_id
+      @user_id = user[:user_id].nil? ? nil : get_user_id
 
       setup_subresources
     end
