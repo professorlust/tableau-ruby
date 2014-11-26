@@ -31,7 +31,7 @@ module Tableau
     end
 
     def find_by_id(site_id, params={})
-      return { error: "site_id is missing." }.to_json unless site_object[:site_id]
+      return { error: "site_id is missing." }.to_json unless site_id.nil? || site_id.blank?
 
       resp = @client.conn.get "/api/2.0/sites/#{site_id}" do |req|
         params.each {|k,v| req.params[k] = v}
