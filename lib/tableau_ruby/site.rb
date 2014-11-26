@@ -57,8 +57,22 @@ module Tableau
     end
 
     def create(payload)
+
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.tsRequest do
+          xml.site(
+            name: payload[:name] || 'New Site',
+            contentUrl: payload[:name] || 'some-content-url',
+            adminMode: payload[:admin_mode] || 'some-admin-mode',
+            userQuota: payload[:user_quota] || 'num-users',
+            storageQuota: payload[:storage_quota] || 'limit-in-megabytes',
+            disableSubscriptions: payload[:disable_subscriptions] || false
+          )
+        end
+      end
+
       resp = @client.conn.post "/api/2.0/sites" do |req|
-        req.payload payload
+        req.payload builder.to_xml
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       normalize_json(resp.body)
