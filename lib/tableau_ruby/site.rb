@@ -59,12 +59,13 @@ module Tableau
     end
 
     def create(site_object)
+      return { error: "name is missing." }.to_json unless site_object[:name]
 
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
           xml.site(
             name: site_object[:name] || 'New Site',
-            contentUrl: site_object[:content_url],
+            contentUrl: site_object[:content_url] || site_object[:name],
             adminMode: site_object[:admin_mode] || 'ContentAndUsers',
             userQuota: site_object[:user_quota] || '100',
             storageQuota: site_object[:storage_quota] || '20',

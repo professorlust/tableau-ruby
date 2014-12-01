@@ -5,24 +5,29 @@ module Tableau
       @client = client
     end
 
-    def all(get_thumbnails=false)
-
-      resp = http_request("/api/2.0/sites/77ddcbd3-2172-423b-a3c5-ce71420e29f5/users/0f530670-e811-4911-a2bd-40cacc9e0485/workbooks", nil, "get")
-      puts "/api/2.0/sites/#{@site_id}/users/#{@user_id}/workbooks"
-      if resp.status == 200
-        workbooks = Hash.from_xml(Nokogiri::XML(resp.body).css("tsResponse workbooks").to_s)["workbooks"]["workbook"]
-        if get_thumbnails
-          workbooks.each do |wb|
-            wb["image"] = http_request("/api/2.0/sites/#{@site_id}/workbooks/#{wb['id']}/previewImage", nil, "get").body
-            wb["view_name"] = Nokogiri::XML(http_request("/api/2.0/sites/#{@site_id}/workbooks/#{wb['id']}/views", nil, "get").body).css("tsResponse views view").first[:name]
-          end
-        else
-          workbooks
-        end
-      else
-        nil
+    def all(site_id, user_id, params={})
+      resp = @client.conn.get "/api/2.0/sites/#{site_id}/users/#{user_id}/workbooks" do |req|
+        params.each {|k,v| req.params[k] = v}
+        req.params['getThumbnails'] = params[:get_thumbnails].nil? ? false : params[:get_thumbnails]
+        req.params['includeProjects'] = 'true'
+        req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
+      data = {workbooks: []}
+      doc = Nokogiri::XML(resp.body)
+      doc.css("tsResponse workbooks workbook").each do |w|
+        workbook = {id: w["id"], name: w["name"]}
+
+        if params[:get_thumbnails]
+          workbook["image"] = @client.conn.get("/api/2.0/sites/#{site_id}/workbooks/#{w['id']}/previewImage").body
+          # workbook["view_name"] = Nokogiri::XML(http_request("/api/2.0/sites/#{@site_id}/workbooks/#{wb['id']}/views", nil, "get").body).css("tsResponse views view").first[:name]
+        end
+
+        data[:workbooks] << workbook
+      end
+      data.to_json
     end
+
+
 
   end
 end
