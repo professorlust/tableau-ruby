@@ -23,5 +23,67 @@ module Tableau
       @projects.to_json
     end
 
+    def create(project)
+      return { error: "name is missing." }.to_json unless project[:name]
+
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.tsRequest do
+          xml.project(
+            name: project[:name],
+            description: project[:description]
+          )
+        end
+      end
+
+      resp = @client.conn.post "/api/2.0/sites/#{project[:site_id]}/projects" do |req|
+        req.body = builder.to_xml
+        req.headers['X-Tableau-Auth'] = @client.token if @client.token
+      end
+      if resp.status == 201
+        {project: resp.body}.to_json
+      else
+        {error: resp.status}.to_json
+      end
+    end
+
+    def update(project)
+      return { error: "name is missing." }.to_json unless project[:name]
+
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.tsRequest do
+          xml.project(
+            name: project[:name],
+            description: project[:description]
+          )
+        end
+      end
+
+      resp = @client.conn.put "/api/2.0/sites/#{project[:site_id]}/projects/#{project[:project_id]}" do |req|
+        req.body = builder.to_xml
+        req.headers['X-Tableau-Auth'] = @client.token if @client.token
+      end
+      if resp.status == 200
+        {project: resp.body}.to_json
+      else
+        puts resp.body
+        {error: resp.status}.to_json
+      end
+    end
+
+
+    def delete(project)
+      return { error: "site_id is missing." }.to_json unless project[:site_id]
+
+      resp = @client.conn.delete "/api/2.0/sites/#{project[:site_id]}/projects/#{project[:project_id]}" do |req|
+        req.headers['X-Tableau-Auth'] = @client.token if @client.token
+      end
+
+      if resp.status == 204
+        {success: 'project successfully deleted.'}.to_json
+      else
+        {error: resp.status}.to_json
+      end
+    end
+
   end
 end
