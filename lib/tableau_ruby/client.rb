@@ -1,19 +1,25 @@
 module Tableau
   class Client
-    attr_reader :conn, :projects, :sites, :site_id, :site_name, :token, :users, :user_id, :workbooks
+    attr_reader :conn, :host, :projects, :sites, :site_id, :site_name, :token, :users, :user_id, :workbooks
 
     #{username, user_id, password, site}
-    def initialize(user)
-      @user_creds = user
-      @site_name = user[:site_name] || "Default"
+    def initialize(args={})
+      @host = args[:host] || Tableau.host
+      @username = args[:username] || Tableau.username
+      @password = args[:password] || Tableau.password
+      @site_name = args[:site_name] || "Default"
 
       setup_connection
 
-      @token = sign_in(user)
+      @token = sign_in
       @site_id = get_site_id
-      @user_id = user[:user_id].nil? ? nil : get_user_id
+      @user_id = args[:user_id].nil? ? nil : get_user_id
 
       setup_subresources
+    end
+
+    def inspect
+      "<Tableau::Client @host=#{@host} @username=#{@username} @site_name=#{@site_name} @site_id=#{@site_id} @user_id=#{@user_id}>"
     end
 
     ##
@@ -46,7 +52,7 @@ module Tableau
     end
 
     def setup_connection
-      @conn = Faraday.new(url: "https://tabdev.traxtech.com") do |f|
+      @conn = Faraday.new(url: @host) do |f|
         f.request :url_encoded
         f.response :logger
         f.adapter Faraday.default_adapter
@@ -59,10 +65,10 @@ module Tableau
     #     <site contentUrl="" />
     #   </credentials>
     # </tsRequest>
-    def sign_in(user)
+    def sign_in
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
-          xml.credentials(name: user[:username], password: user[:password]) do
+          xml.credentials(name: @username, password: @password) do
             #xml.user(id: @user[:user_id])
             xml.site
           end
@@ -99,7 +105,7 @@ module Tableau
       puts resp.body
 
       if resp.status == 200
-        return Nokogiri::XML(resp.body).css("tsResponse users user[name='#{@user_creds[:user_id]}']").first[:id]
+        return Nokogiri::XML(resp.body).css("tsResponse users user[name='#{@username}']").first[:id]
       else
         nil
       end
