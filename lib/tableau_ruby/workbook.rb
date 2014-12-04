@@ -8,9 +8,9 @@ module Tableau
     end
 
     def all(params={})
-      return { error: "site_id is missing." }.to_json if site_id.nil? || site_id.empty?
+      return { error: "site_id is missing." }.to_json if params[:site_id].nil? || params[:site_id].empty?
 
-      resp = @client.conn.get "/api/2.0/sites/#{site_id}/users/#{user_id}/workbooks" do |req|
+      resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users/#{user_id}/workbooks" do |req|
         params.each {|k,v| req.params[k] = v}
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
@@ -20,7 +20,7 @@ module Tableau
         workbook = {id: w["id"], name: w["name"]}
 
         if params[:get_thumbnails]
-          resp = @client.conn.get("/api/2.0/sites/#{site_id}/workbooks/#{w['id']}/previewImage") do |req|
+          resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{w['id']}/previewImage") do |req|
             req.headers['X-Tableau-Auth'] = @client.token if @client.token
           end
           workbook["image"] = Base64.encode64(resp.body)
