@@ -5,17 +5,13 @@ module Tableau
       @client = client
     end
 
-    def all(site_name, params={})
+    def all(params={})
       resp = @client.conn.get "/api/2.0/sites" do |req|
-        params.each {|k,v| req.params[k] = v}
-        req.params['includeProjects'] = 'true'
+        req.params['includeProjects'] = params[:include_projects]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-      data = {sites: []}
-      doc = Nokogiri::XML(resp.body)
-      doc.css("tsResponse sites site").each do |s|
-        next unless s['name'].downcase == site_name.downcase
-        @projects = {projects: []}
+      @projects = {projects: []}
+      Nokogiri::XML(resp.body).css("tsResponse sites site").each do |s|
         s.css("project").each do |p|
           @projects[:projects] << {id: p["id"], name: p["name"]}
         end
@@ -24,6 +20,7 @@ module Tableau
     end
 
     def create(project)
+      return { error: "site_id is missing." }.to_json unless project[:site_id]
       return { error: "name is missing." }.to_json unless project[:name]
 
       builder = Nokogiri::XML::Builder.new do |xml|
@@ -47,6 +44,7 @@ module Tableau
     end
 
     def update(project)
+      return { error: "site_id is missing." }.to_json unless project[:site_id]
       return { error: "name is missing." }.to_json unless project[:name]
 
       builder = Nokogiri::XML::Builder.new do |xml|
@@ -65,7 +63,6 @@ module Tableau
       if resp.status == 200
         {project: resp.body}.to_json
       else
-        puts resp.body
         {error: resp.status}.to_json
       end
     end
@@ -73,13 +70,14 @@ module Tableau
 
     def delete(project)
       return { error: "site_id is missing." }.to_json unless project[:site_id]
+      return { error: "project_id is missing." }.to_json unless project[:project_id]
 
       resp = @client.conn.delete "/api/2.0/sites/#{project[:site_id]}/projects/#{project[:project_id]}" do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
       if resp.status == 204
-        {success: 'project successfully deleted.'}.to_json
+        {success: 'Project successfully deleted.'}.to_json
       else
         {error: resp.status}.to_json
       end

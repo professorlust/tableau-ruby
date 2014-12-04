@@ -7,7 +7,7 @@ module Tableau
       @client = client
     end
 
-    def all(site_id, user_id, params={})
+    def all(params={})
       return { error: "site_id is missing." }.to_json if site_id.nil? || site_id.empty?
 
       resp = @client.conn.get "/api/2.0/sites/#{site_id}/users/#{user_id}/workbooks" do |req|

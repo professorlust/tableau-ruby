@@ -5,9 +5,9 @@ module Tableau
       @client = client
     end
 
-    def all(params={includeProjects: true})
+    def all(params={})
       resp = @client.conn.get "/api/2.0/sites" do |req|
-        params.each {|k,v| req.params[k] = v}
+        req.params['includeProjects'] = params[:include_projects]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       data = {sites: []}
@@ -30,46 +30,30 @@ module Tableau
       data.to_json
     end
 
-    def find_by_id(site_id, params={})
-      return { error: "site_id is missing." }.to_json if site_id.nil? || site_id.empty?
-
-      resp = @client.conn.get "/api/2.0/sites/#{site_id}" do |req|
-        params.each {|k,v| req.params[k] = v}
+    def find_by(params={})
+      key = params.keys - [:include_projects]
+      term = params[key[0]]
+      resp = @client.conn.get "/api/2.0/sites/#{term}" do |req|
+        req.params['includeProjects'] = params[:include_projects]
+        req.params["key"] = "name" if term == params[:site_name]
+        req.params["key"] = "contentUrl" if term == params[:site_url]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       normalize_json(resp.body)
     end
 
-    def find_by_site_name(site_name, params={})
-      resp = @client.conn.get "/api/2.0/sites/#{site_name}" do |req|
-        req.params["key"] = "name"
-        params.each {|k,v| req.params[k] = v}
-        req.headers['X-Tableau-Auth'] = @client.token if @client.token
-      end
-      normalize_json(resp.body)
-    end
-
-    def find_by_site_url_namespace(site_url_namespace, params={})
-      resp = @client.conn.get "/api/2.0/sites/#{site_url_namespace}" do |req|
-        req.params["key"] = "contentUrl"
-        params.each {|k,v| req.params[k] = v}
-        req.headers['X-Tableau-Auth'] = @client.token if @client.token
-      end
-      normalize_json(resp.body)
-    end
-
-    def create(site_object)
-      return { error: "name is missing." }.to_json unless site_object[:name]
+    def create(site)
+      return { error: "name is missing." }.to_json unless site[:name]
 
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
           xml.site(
-            name: site_object[:name] || 'New Site',
-            contentUrl: site_object[:content_url] || site_object[:name],
-            adminMode: site_object[:admin_mode] || 'ContentAndUsers',
-            userQuota: site_object[:user_quota] || '100',
-            storageQuota: site_object[:storage_quota] || '20',
-            disableSubscriptions: site_object[:disable_subscriptions] || false
+            name: site[:name] || 'New Site',
+            contentUrl: site[:content_url] || site[:name],
+            adminMode: site[:admin_mode] || 'ContentAndUsers',
+            userQuota: site[:user_quota] || '100',
+            storageQuota: site[:storage_quota] || '20',
+            disableSubscriptions: site[:disable_subscriptions] || false
           )
         end
       end
@@ -85,8 +69,8 @@ module Tableau
       end
     end
 
-    def update(site_object)
-      return { error: "site_id is missing." }.to_json unless site_object[:site_id]
+    def update(site)
+      return { error: "site_id is missing." }.to_json unless site[:site_id]
 
       case_dict = {
         name: "name",
@@ -97,7 +81,7 @@ module Tableau
         disable_subscriptions: "disableSubscriptions"
       }
 
-      site_object.each do |k,v|
+      site.each do |k,v|
         next if k == :site_id
         (@site ||= {}).store(case_dict[k],v)
       end
@@ -108,7 +92,7 @@ module Tableau
         end
       end
 
-      resp = @client.conn.put "/api/2.0/sites/#{site_object[:site_id]}" do |req|
+      resp = @client.conn.put "/api/2.0/sites/#{site[:site_id]}" do |req|
         req.body = builder.to_xml
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
@@ -116,14 +100,19 @@ module Tableau
       normalize_json(resp.body)
     end
 
-    def delete(site_object)
-      return { error: "site_id is missing." }.to_json unless site_object[:site_id]
+    def delete(site)
+      return { error: "site_id is missing." }.to_json unless site[:site_id]
 
-      resp = @client.conn.delete "/api/2.0/sites/#{site_object[:site_id]}" do |req|
+      resp = @client.conn.delete "/api/2.0/sites/#{site[:site_id]}" do |req|
         params.each {|k,v| req.params[k] = v}
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-      normalize_json(resp.body)
+
+      if resp.status == 204
+        {success: 'Site successfully deleted.'}.to_json
+      else
+        {errors: resp.status}.to_json
+      end
     end
 
     private
