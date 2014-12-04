@@ -6,6 +6,7 @@ require 'faraday_middleware'
 require 'faraday_middleware/multi_json'
 
 require 'tableau_ruby/util/configuration'
+
 Dir[File.dirname(__FILE__) + '/tableau_ruby/*.rb'].each do |file|
   require file
 end

@@ -20,7 +20,70 @@ Or install it yourself as:
 
 ## Usage
 
-Unofficial Tableau API Ruby client
+### Setup
+
+``` ruby
+require 'rubygmes'
+require 'tableau_ruby'
+
+Tableau.configure do |config|
+	# Required
+	config.host = 'https://your-url-here.com'
+	config.username = 'your-admin-username'
+	config.password = 'your-admin-password'
+	# Optional
+	config.user_id = 'user-to-act-on-behalf-of'
+	config.site_name = 'defaults-to-Default'
+end
+
+@client = Tableau::Client.new
+```
+
+### Sites
+``` ruby
+
+# By default the all request does not include projects in the results
+# add them by including include_projects: true
+@sites = client.sites.all(include_projects: true)
+@site = client.sites.find_by(site_id: 'string-id') # also try site_name and site_url
+
+@site = client.sites.create(name: 'Project Name')
+@site = client.sites.update(site_id: 'site-id')
+@site = client.sites.delete(site_id: 'site-id')
+
+```
+
+### Projects
+``` ruby
+
+@projects = @client.projects.all()
+
+@project = client.projects.create(name: 'Project Name')
+@project = client.projects.update(site_id: 'project-site-id', project_id: 'project-id')
+@project = client.projects.delete(site_id: 'project-site-id', project_id: 'project-id')
+
+```
+
+### Users
+``` ruby
+
+@users = client.users.all(site_id: 'site-id')
+@user = client.users.find_by(site_id: 'site-id', name: 'user-name')
+
+@user = client.users.create(site_id: 'site-id', name: 'new user')
+@user = client.users.delete(site_id: 'site-id', user_id: 'user-id')
+```
+
+### Workbooks
+``` ruby
+
+```
+
+## TODO
+* inherit site_id from client object to avoid having to pass site_id
+* consolidate parameter checking
+* error responses
+* make self documenting
 
 ## Contributing
 
