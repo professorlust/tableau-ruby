@@ -34,7 +34,7 @@ module Tableau
       key = params.keys - [:include_projects]
       term = params[key[0]]
       resp = @client.conn.get "/api/2.0/sites/#{term}" do |req|
-        req.params['includeProjects'] = params[:include_projects]
+        req.params['includeProjects'] = params[:include_projects] || false
         req.params["key"] = "name" if term == params[:site_name]
         req.params["key"] = "contentUrl" if term == params[:site_url]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
