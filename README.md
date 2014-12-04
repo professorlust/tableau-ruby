@@ -40,7 +40,11 @@ end
 
 # Alternatively pass the information as a hash
 
-@client = Tableau::Client.new(host: 'https://your-url-here.com', username: 'your-admin-password', password: 'your-admin-password')
+@client = Tableau::Client.new(
+	host: 'https://your-url-here.com',
+	username: 'your-admin-password',
+	password: 'your-admin-password'
+)
 
 ```
 
