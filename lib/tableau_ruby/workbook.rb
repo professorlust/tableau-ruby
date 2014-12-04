@@ -32,5 +32,23 @@ module Tableau
       data.to_json
     end
 
+    def find(workbook)
+      resp = @client.conn.get "/api/2.0/sites/#{workbook[:site_id]}/workbooks/#{workbook[:workbook_id]}}" do |req|
+        req.params['previewImage'] = params[:preview_images] || true
+        req.headers['X-Tableau-Auth'] = @client.token if @client.token
+      end
+
+      data = {}
+      Nokogiri::XML(r).css("workbook").each do |w|
+        data[:site] = {
+          name: "#{w['name']}",
+          id: "#{w['id']}",
+          description: "#{w['description']}"
+        }
+      end
+      data.to_json
+
+    end
+
   end
 end

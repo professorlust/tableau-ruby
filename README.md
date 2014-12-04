@@ -23,7 +23,7 @@ Or install it yourself as:
 ### Setup
 
 ``` ruby
-require 'rubygmes'
+require 'rubygems'
 require 'tableau_ruby'
 
 Tableau.configure do |config|
@@ -54,8 +54,8 @@ end
 # By default the all request does not include projects in the results
 # add them by including include_projects: true
 @sites = client.sites.all(include_projects: true)
-@site = client.sites.find_by(site_id: 'string-id') # also try site_name and site_url
 
+@site = client.sites.find_by(site_id: 'string-id') # also try site_name and site_url
 @site = client.sites.create(name: 'Project Name')
 @site = client.sites.update(site_id: 'site-id')
 @site = client.sites.delete(site_id: 'site-id')
@@ -77,16 +77,19 @@ end
 ``` ruby
 
 @users = client.users.all(site_id: 'site-id')
-@user = client.users.find_by(site_id: 'site-id', name: 'user-name')
 
+@user = client.users.find_by(site_id: 'site-id', name: 'user-name')
 @user = client.users.create(site_id: 'site-id', name: 'new user')
 @user = client.users.delete(site_id: 'site-id', user_id: 'user-id')
+
 ```
 
 ### Workbooks
 ``` ruby
 
 @workbooks = client.workbooks.all(site_id: 'site-id')
+
+@workbook = client.workbooks.find(site_id: 'site-id', workbook_id: 'workbook-id')
 
 ```
 
