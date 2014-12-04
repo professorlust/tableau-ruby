@@ -83,9 +83,6 @@ module Tableau
     def normalize_json(r, name=nil)
       data = {user: {}}
       Nokogiri::XML(r).css("user").each do |u|
-        puts "here"
-        puts u['name'].downcase
-        puts name.downcase
         data[:user] = {
           id: u['id'],
           name: u['name'],
@@ -95,7 +92,7 @@ module Tableau
           last_login: u['lastLogin'],
           external_auth_user_id: u['externalAuthUserId']
         }
-        return data if !name.nil? && name.downcase == u['name'].downcase
+        return data.to_json if !name.nil? && name == u['name']
       end
       data.to_json
     end
