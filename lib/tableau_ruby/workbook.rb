@@ -11,12 +11,11 @@ module Tableau
       return { error: "site_id is missing." }.to_json if params[:site_id].nil? || params[:site_id].empty?
 
       resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users/#{params[:user_id]}/workbooks" do |req|
-        params.each {|k,v| req.params[k] = v}
+        req.params['getThumbnails'] = params[:get_thumbnails] if params[:get_thumbnails]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       data = {workbooks: []}
-      doc = Nokogiri::XML(resp.body)
-      doc.css("tsResponse workbooks workbook").each do |w|
+      doc = Nokogiri::XML(resp.body).css("workbook").each do |w|
         workbook = {id: w["id"], name: w["name"]}
 
         if params[:get_thumbnails]
