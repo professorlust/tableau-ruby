@@ -81,7 +81,7 @@ module Tableau
     private
 
     def normalize_json(r, name=nil)
-      data = {}
+      data = {user: {}}
       Nokogiri::XML(r).css("user").each do |u|
         puts "here"
         puts u['name'].downcase

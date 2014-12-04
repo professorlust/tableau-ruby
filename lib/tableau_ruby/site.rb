@@ -118,7 +118,7 @@ module Tableau
     private
 
     def normalize_json(r)
-      data = {}
+      data = {site: {}}
       Nokogiri::XML(r).css("tsResponse site").each do |s|
         data[:site] = {
           name: "#{s['name']}",
