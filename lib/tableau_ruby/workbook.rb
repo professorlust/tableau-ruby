@@ -15,7 +15,7 @@ module Tableau
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       data = {workbooks: []}
-      doc = Nokogiri::XML(resp.body).css("workbook").each do |w|
+      Nokogiri::XML(resp.body).css("workbook").each do |w|
         workbook = {id: w["id"], name: w["name"]}
 
         if params[:get_thumbnails]
@@ -32,19 +32,31 @@ module Tableau
     end
 
     def find(workbook)
-      resp = @client.conn.get "/api/2.0/sites/#{workbook[:site_id]}/workbooks/#{workbook[:workbook_id]}}" do |req|
-        req.params['previewImage'] = params[:preview_images] || true
+      resp = @client.conn.get "/api/2.0/sites/#{workbook[:site_id]}/workbooks/#{workbook[:workbook_id]}" do |req|
+        req.params['previewImage'] = workbook[:preview_images] if workbook[:preview_images]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
-      data = {}
-      Nokogiri::XML(r).css("workbook").each do |w|
-        data[:site] = {
-          name: "#{w['name']}",
-          id: "#{w['id']}",
-          description: "#{w['description']}"
-        }
+      data = {workbook: {}}
+      Nokogiri::XML(resp.body).css("workbook").each do |w|
+
+        wkbk = {id: w["id"], name: w["name"], description: w['description']}
+
+        if workbook[:include_views]
+          views_resp = @client.conn.get("/api/2.0/sites/#{workbook[:site_id]}/workbooks/#{workbook[:workbook_id]}/views") do |req|
+            req.headers['X-Tableau-Auth'] = @client.token if @client.token
+          end
+
+          Nokogiri::XML(views_resp.body).css("view").each do |v|
+            (@views ||= []) << {id: v['id'], name: v['name']}
+          end
+
+          wkbk[:views] = @views
+        end
+
+        data[:workbook] = wkbk
       end
+
       data.to_json
 
     end
