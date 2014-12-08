@@ -11,23 +11,40 @@ module Tableau
       return { error: "site_id is missing." }.to_json if params[:site_id].nil? || params[:site_id].empty?
 
       resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users/#{params[:user_id]}/workbooks" do |req|
-        req.params['getThumbnails'] = params[:get_thumbnails] if params[:get_thumbnails]
+        req.params['getThumbnails'] = params[:include_images] if params[:include_images]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-      data = {workbooks: []}
-      Nokogiri::XML(resp.body).css("workbook").each do |w|
+
+      data = {workbooks: [], pagination: {}}
+      doc = Nokogiri::XML(resp.body)
+
+      doc.css("pagination").each do |p|
+        data[:pagination][:page_number] = p['pageNumber']
+        data[:pagination][:page_size] = p['pageSize']
+        data[:pagination][:total_available] = p['totalAvailable']
+      end
+
+      doc.css("workbook").each do |w|
         workbook = {id: w["id"], name: w["name"]}
 
-        if params[:get_thumbnails]
+        if params[:include_images]
           resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{w['id']}/previewImage") do |req|
             req.headers['X-Tableau-Auth'] = @client.token if @client.token
           end
-          workbook["image"] = Base64.encode64(resp.body)
-          workbook["image_mime_type"] = "image/png"
+          workbook[:image] = Base64.encode64(resp.body)
+          workbook[:image_mime_type] = "image/png"
+        end
+
+        w.css('project').each do |p|
+          workbook[:project] = {id: p['id'], name: p['name']}
+        end
+
+        w.css("tag").each do |t|
+          workbook[:tags] << t['id']
         end
 
         if params[:include_views]
-          wkbk[:views] = include_views(site_id: params[:site_id], workbook_id: w['id'])
+          workbook[:views] = include_views(site_id: params[:site_id], workbook_id: w['id'])
         end
 
         data[:workbooks] << workbook

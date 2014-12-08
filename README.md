@@ -72,7 +72,7 @@ end
 
 @projects = @client.projects.all()
 
-@project = client.projects.create(name: 'Project Name')
+@project = client.projects.create(site_id: 'project-site-id', name: 'Project Name')
 @project = client.projects.update(site_id: 'project-site-id', project_id: 'project-id')
 @project = client.projects.delete(site_id: 'project-site-id', project_id: 'project-id')
 
