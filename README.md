@@ -46,6 +46,11 @@ end
 	password: 'your-admin-password'
 )
 
+@site = JSON.parse(@client.sites.find_by(site_name: 'Default'))['site']
+
+@user = Tableau::User.new(@client, JSON.parse(@client.users.find_by(site_id: @site['id'], name: 'user-name'))['user'])
+@user.workbooks
+
 ```
 
 ### Sites
@@ -89,7 +94,7 @@ end
 
 @workbooks = client.workbooks.all(site_id: 'site-id')
 
-@workbook = client.workbooks.find(site_id: 'site-id', workbook_id: 'workbook-id')
+@workbook = client.workbooks.find(site_id: 'site-id', workbook_id: 'workbook-id', include_views: true)
 
 ```
 

@@ -1,99 +1,53 @@
 module Tableau
   class User
 
-    def initialize(client)
-      @client = client
+    attr_accessor :id, :name, :role, :publish, :content_admin, :last_login, :external_auth_user_id, :site_id, :workbooks, :projects
+
+    def initialize(client, u)
+      @client                = client
+      @id                    = u['id']
+      @name                  = u['name']
+      @role                  = u['role']
+      @publish               = u['publish']
+      @content_admin         = u['contentAdmin']
+      @last_login            = u['lastLogin']
+      @external_auth_user_id = u['externalAuthUserId']
+      @site_id               = @client.site_id
     end
 
-    def all(params={})
-      return { error: "site_id is missing." }.to_json if params[:site_id].nil? || params[:site_id].empty?
-
-      resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users" do |req|
+    def workbooks(options={})
+      resp = @client.conn.get "/api/2.0/sites/#{@site_id}/users/#{@id}/workbooks" do |req|
+        req.params['pageSize'] = options[:page_size] if options[:page_size]
+        req.params['pageNumber'] = options[:page_number] if options[:page_number]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
-      data = {users: []}
-      Nokogiri::XML(resp.body).css("tsResponse users user").each do |u|
-        data[:users] << {
-          id: u['id'],
-          name: u['name'],
-          role: u['role'],
-          publish: u['publish'],
-          content_admin: u['contentAdmin'],
-          last_login: u['lastLogin'],
-          external_auth_user_id: u['externalAuthUserId']
-        }
+      data = {workbooks: [], pagination: {}}
+
+      Nokogiri::XML(resp.body).css("pagination").each do |p|
+        data[:pagination][:page_number] = p['pageNumber']
+        data[:pagination][:page_size] = p['pageSize']
+        data[:pagination][:total_available] = p['totalAvailable']
       end
-      data.to_json
-    end
 
-    def find_by(user)
-      return { error: "site_id is missing." }.to_json if user[:site_id].nil? || user[:site_id].empty?
-      return { error: "user_id is missing." }.to_json if user.nil? || user.empty?
+      Nokogiri::XML(resp.body).css("workbook").each do |w|
+        wkbk = {id: w["id"], name: w["name"], project: {}, views: [], tags: []}
 
-      resp = @client.conn.get "/api/2.0/sites/#{user[:site_id]}/users" do |req|
-        req.headers['X-Tableau-Auth'] = @client.token if @client.token
-      end
-      normalize_json(resp.body, user[:name])
-    end
-
-    def create(user)
-      return { error: "name is missing." }.to_json unless user[:name]
-
-      builder = Nokogiri::XML::Builder.new do |xml|
-        xml.tsRequest do
-          xml.user(
-            name: user[:name] || 'New User',
-            role: user[:role] || true,
-            publish: user[:publish] || true,
-            contentAdmin: user[:content_admin] || false,
-            suppressGettingStarted: user[:storage_quota] || false
-          )
+        w.css('project').each do |p|
+          wkbk[:project] = {id: p['id'], name: p['name']}
         end
+
+        w.css("view").each do |v|
+          wkbk[:views] << v['id']
+        end
+
+        w.css("tag").each do |t|
+          wkbk[:tags] << t['id']
+        end
+
+        data[:workbooks] << wkbk
       end
 
-      resp = @client.conn.post "/api/2.0/sites/#{user[:site_id]}/users" do |req|
-        req.body = builder.to_xml
-        req.headers['X-Tableau-Auth'] = @client.token if @client.token
-      end
-      if resp.status == 201
-        normalize_json(resp.body)
-      else
-        {error: { status: resp.status, message: resp.body }}.to_json
-      end
-    end
-
-    def delete(user)
-      return { error: "site_id is missing." }.to_json unless user[:site_id]
-      return { error: "user_id is missing." }.to_json unless user[:user_id]
-
-      resp = @client.conn.delete "/api/2.0/sites/#{user[:site_id]}/users/#{user[:user_id]}" do |req|
-        req.headers['X-Tableau-Auth'] = @client.token if @client.token
-      end
-
-      if resp.status == 204
-        {success: 'User successfully deleted.'}.to_json
-      else
-        {errors: resp.status}.to_json
-      end
-    end
-
-    private
-
-    def normalize_json(r, name=nil)
-      data = {user: {}}
-      Nokogiri::XML(r).css("user").each do |u|
-        data[:user] = {
-          id: u['id'],
-          name: u['name'],
-          role: u['role'],
-          publish: u['publish'],
-          content_admin: u['contentAdmin'],
-          last_login: u['lastLogin'],
-          external_auth_user_id: u['externalAuthUserId']
-        }
-        return data.to_json if !name.nil? && name == u['name']
-      end
       data.to_json
     end
 

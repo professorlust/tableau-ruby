@@ -26,6 +26,10 @@ module Tableau
           workbook["image_mime_type"] = "image/png"
         end
 
+        if params[:include_views]
+          wkbk[:views] = include_views(site_id: params[:site_id], workbook_id: w['id'])
+        end
+
         data[:workbooks] << workbook
       end
       data.to_json
@@ -43,15 +47,7 @@ module Tableau
         wkbk = {id: w["id"], name: w["name"], description: w['description']}
 
         if workbook[:include_views]
-          views_resp = @client.conn.get("/api/2.0/sites/#{workbook[:site_id]}/workbooks/#{workbook[:workbook_id]}/views") do |req|
-            req.headers['X-Tableau-Auth'] = @client.token if @client.token
-          end
-
-          Nokogiri::XML(views_resp.body).css("view").each do |v|
-            (@views ||= []) << {id: v['id'], name: v['name']}
-          end
-
-          wkbk[:views] = @views
+          wkbk[:views] = include_views(site_id: workbook[:site_id], workbook_id: workbook[:workbook_id])
         end
 
         data[:workbook] = wkbk
@@ -59,6 +55,20 @@ module Tableau
 
       data.to_json
 
+    end
+
+    private
+
+    def include_views(params)
+      resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{params[:workbook_id]}/views") do |req|
+        req.headers['X-Tableau-Auth'] = @client.token if @client.token
+      end
+
+      Nokogiri::XML(resp.body).css("view").each do |v|
+        (@views ||= []) << {id: v['id'], name: v['name']}
+      end
+
+      @views
     end
 
   end

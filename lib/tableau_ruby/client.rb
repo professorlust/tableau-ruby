@@ -45,7 +45,7 @@ module Tableau
     private
 
     def setup_subresources
-      @users     = Tableau::User.new(self)
+      @users     = Tableau::Users.new(self)
       @projects  = Tableau::Project.new(self)
       @sites     = Tableau::Site.new(self)
       @workbooks = Tableau::Workbook.new(self)
