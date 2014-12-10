@@ -19,6 +19,7 @@ module Tableau
         data[:users] << {
           id: u['id'],
           name: u['name'],
+          site_id: params[:site_id],
           role: u['role'],
           publish: u['publish'],
           content_admin: u['contentAdmin'],
@@ -36,7 +37,7 @@ module Tableau
       resp = @client.conn.get "/api/2.0/sites/#{user[:site_id]}/users" do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-      normalize_json(resp.body, user[:name])
+      normalize_json(resp.body, user[:site_id], user[:name])
     end
 
     def create(user)
@@ -59,7 +60,7 @@ module Tableau
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       if resp.status == 201
-        normalize_json(resp.body)
+        normalize_json(resp.body, user[:site_id])
       else
         {error: { status: resp.status, message: resp.body }}.to_json
       end
@@ -82,12 +83,13 @@ module Tableau
 
     private
 
-    def normalize_json(r, name=nil)
+    def normalize_json(r, site_id, name=nil)
       data = {user: {}}
       Nokogiri::XML(r).css("user").each do |u|
         data[:user] = {
           id: u['id'],
           name: u['name'],
+          site_id: site_id,
           role: u['role'],
           publish: u['publish'],
           content_admin: u['contentAdmin'],
