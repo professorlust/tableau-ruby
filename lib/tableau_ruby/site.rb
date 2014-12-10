@@ -31,7 +31,11 @@ module Tableau
     end
 
     def find_by(params={})
-      return { error: "name is missing." }.to_json if params[:name].nil? || params[:name].gsub(" ", "").empty?
+      if params[:site_name] && params[:site_name].nil? || params[:site_name].gsub(" ", "").empty?
+        return { error: "site name is missing." }.to_json
+      elsif params[:site_id] && params[:site_id].nil? || params[:site_id].gsub(" ", "").empty?
+        return { error: "site id is missing." }.to_json
+      end
       key = params.keys - [:include_projects]
       term = params[key[0]]
       resp = @client.conn.get "/api/2.0/sites/#{term}" do |req|
