@@ -31,9 +31,9 @@ module Tableau
     end
 
     def find_by(params={})
-      if params[:site_name] && params[:site_name].nil? || params[:site_name].gsub(" ", "").empty?
+      if params.include? :site_name && params[:site_name].nil? || params[:site_name].gsub(" ", "").empty?
         return { error: "site name is missing." }.to_json
-      elsif params[:site_id] && params[:site_id].nil? || params[:site_id].gsub(" ", "").empty?
+      elsif params.include? :site_name && params[:site_id].nil? || params[:site_id].gsub(" ", "").empty?
         return { error: "site id is missing." }.to_json
       end
       key = params.keys - [:include_projects]
@@ -48,13 +48,13 @@ module Tableau
     end
 
     def create(site)
-      return { error: "name is missing." }.to_json unless site[:name]
+      return { error: "site name is missing." }.to_json unless site[:site_name]
 
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
           xml.site(
-            name: site[:name] || 'New Site',
-            contentUrl: site[:content_url] || site[:name],
+            name: site[:site_name] || 'New Site',
+            contentUrl: site[:content_url] || site[:site_name],
             adminMode: site[:admin_mode] || 'ContentAndUsers',
             userQuota: site[:user_quota] || '100',
             storageQuota: site[:storage_quota] || '20',
