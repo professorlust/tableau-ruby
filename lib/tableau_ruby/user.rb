@@ -12,7 +12,7 @@ module Tableau
       @content_admin         = u['contentAdmin']
       @last_login            = u['lastLogin']
       @external_auth_user_id = u['externalAuthUserId']
-      @site_id               = @client.site_id
+      @site_id               = u['site_id'] || @client.site_id
     end
 
     def workbooks(options={})
