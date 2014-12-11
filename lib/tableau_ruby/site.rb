@@ -16,14 +16,14 @@ module Tableau
           (@projects ||= []) << {id: p["id"], name: p["name"]}
         end
         data[:sites] << {
-          name: "#{s['name']}",
-          id: "#{s['id']}",
-          content_url: "#{s['contentUrl']}",
-          admin_mode: "#{s['adminMode']}",
-          user_quota: "#{s['userQuota']}",
-          storage_quota: "#{s['storageQuota']}",
-          state: "#{s['state']}",
-          status_reason: "#{s['statusReason']}",
+          name: s['name'],
+          id: s['id'],
+          content_url: s['contentUrl'],
+          admin_mode: s['adminMode'],
+          user_quota: s['userQuota'],
+          storage_quota: s['storageQuota'],
+          state: s['state'],
+          status_reason: s['statusReason'],
           projects: @projects
         }
       end
@@ -124,16 +124,16 @@ module Tableau
 
     def normalize_json(r)
       data = {site: {}}
-      Nokogiri::XML(r).css("tsResponse site").each do |s|
+      Nokogiri::XML(r).css("site").each do |s|
         data[:site] = {
-          name: "#{s['name']}",
-          id: "#{s['id']}",
-          content_url: "#{s['contentUrl']}",
-          admin_mode: "#{s['adminMode']}",
-          user_quota: "#{s['userQuota']}",
-          storage_quota: "#{s['storageQuota']}",
-          state: "#{s['state']}",
-          status_reason: "#{s['statusReason']}"
+          name: s['name'],
+          id: s['id'],
+          content_url: s['contentUrl'],
+          admin_mode: s['adminMode'],
+          user_quota: s['userQuota'],
+          storage_quota: s['storageQuota'],
+          state: s['state'],
+          status_reason: s['statusReason']
         }
       end
       data.to_json

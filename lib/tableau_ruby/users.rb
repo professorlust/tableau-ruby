@@ -8,9 +8,10 @@ module Tableau
     end
 
     def all(params={})
-      return { error: "site_id is missing." }.to_json if params[:site_id].nil? || params[:site_id].empty?
+      # return { error: "site_id is missing." }.to_json if params[:site_id].nil? || params[:site_id].empty?
+      site_id = params[:site_id] || @client.site_id
 
-      resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users" do |req|
+      resp = @client.conn.get "/api/2.0/sites/#{site_id}/users" do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 

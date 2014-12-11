@@ -1,6 +1,6 @@
 module Tableau
   class Client
-    attr_reader :conn, :host, :projects, :sites, :site_id, :site_name, :token, :users, :user_id, :workbooks
+    attr_reader :conn, :host, :projects, :sites, :site_id, :site_name, :token, :user, :users, :workbooks
 
     #{username, user_id, password, site}
     def initialize(args={})
@@ -13,13 +13,15 @@ module Tableau
 
       @token = sign_in
       @site_id = get_site_id
-      @user_id = args[:user_id].nil? ? nil : get_user_id
+      # @user_id = args[:user_id].nil? ? nil : get_user_id
 
       setup_subresources
+
+      @user = Tableau::User.new(self, JSON.parse(@users.find_by(site_id: @site_id, name: args[:user_name]))['user']) if args.include? :user_name
     end
 
     def inspect
-      "<Tableau::Client @host=#{@host} @username=#{@username} @site_name=#{@site_name} @site_id=#{@site_id} @user_id=#{@user_id}>"
+      "<Tableau::Client @host=#{@host} @username=#{@username} @site_name=#{@site_name} @site_id=#{@site_id} @user=#{@user}>"
     end
 
     ##
@@ -97,19 +99,19 @@ module Tableau
       end
     end
 
-    def get_user_id
-      resp = @conn.get "/api/2.0/sites/#{@site_id}/users/" do |req|
-        req.headers['X-Tableau-Auth'] = @token if @token
-      end
+    # def get_user_id
+    #   resp = @conn.get "/api/2.0/sites/#{@site_id}/users/" do |req|
+    #     req.headers['X-Tableau-Auth'] = @token if @token
+    #   end
 
-      puts resp.body
+    #   puts resp.body
 
-      if resp.status == 200
-        return Nokogiri::XML(resp.body).css("tsResponse users user[name='#{@username}']").first[:id]
-      else
-        nil
-      end
-    end
+    #   if resp.status == 200
+    #     return Nokogiri::XML(resp.body).css("tsResponse users user[name='#{@username}']").first[:id]
+    #   else
+    #     nil
+    #   end
+    # end
 
   end
 end
