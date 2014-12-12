@@ -66,11 +66,11 @@ module Tableau
     #     <site contentUrl="" />
     #   </credentials>
     # </tsRequest>
-    def sign_in
+    def sign_in(user=nil)
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
           xml.credentials(name: @username, password: @password) do
-            #xml.user(id: @user[:user_id])
+            xml.user(name: user) if user
             xml.site
           end
         end
