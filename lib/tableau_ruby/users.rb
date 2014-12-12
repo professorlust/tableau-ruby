@@ -32,13 +32,15 @@ module Tableau
     end
 
     def find_by(user)
-      return { error: "site_id is missing." }.to_json if user[:site_id].nil? || user[:site_id].empty?
+      site_id = user[:site_id] || @client.site_id
+
+      return { error: "site_id is missing." }.to_json if site_id.nil?
       return { error: "user_id is missing." }.to_json if user.nil? || user.empty?
 
-      resp = @client.conn.get "/api/2.0/sites/#{user[:site_id]}/users" do |req|
+      resp = @client.conn.get "/api/2.0/sites/#{site_id}/users" do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
-      normalize_json(resp.body, user[:site_id], user[:name])
+      normalize_json(resp.body, site_id, user[:name])
     end
 
     def create(user)

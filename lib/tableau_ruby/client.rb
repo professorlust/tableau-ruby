@@ -11,9 +11,8 @@ module Tableau
 
       setup_connection
 
-      @token = sign_in
+      @token = sign_in(args[:user_name])
       @site_id = get_site_id
-      # @user_id = args[:user_id].nil? ? nil : get_user_id
 
       setup_subresources
 
@@ -83,7 +82,7 @@ module Tableau
       if resp.status == 200
         return Nokogiri::XML(resp.body).css("tsResponse credentials").first[:token]
       else
-        raise ""
+        raise ArgumentError, Nokogiri::XML(resp.body).css("detail").text
       end
     end
 
