@@ -15,7 +15,7 @@ end
 module Tableau
   extend SingleForwardable
 
-  def_delegators :configuration, :host, :username, :password
+  def_delegators :configuration, :host, :admin_name, :admin_password
 
   ##
   # Pre-configure with credentials so that you don't need to

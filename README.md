@@ -29,10 +29,10 @@ require 'tableau_ruby'
 Tableau.configure do |config|
 	# Required
 	config.host = 'https://your-url-here.com'
-	config.username = 'your-admin-username'
-	config.password = 'your-admin-password'
+	config.admin_name = 'your-admin-username'
+	config.admin_password = 'your-admin-password'
 	# Optional
-	config.user_id = 'user-to-act-on-behalf-of'
+	config.user_name = 'user-to-act-on-behalf-of'
 	config.site_name = 'defaults-to-Default'
 end
 
@@ -42,8 +42,8 @@ end
 
 @client = Tableau::Client.new(
 	host: 'https://your-url-here.com',
-	username: 'your-admin-password',
-	password: 'your-admin-password'
+	admin_name: 'your-admin-password',
+	admin_password: 'your-admin-password'
 )
 
 @site = JSON.parse(@client.sites.find_by(site_name: 'Default'))['site']

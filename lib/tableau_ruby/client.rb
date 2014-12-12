@@ -5,8 +5,8 @@ module Tableau
     #{username, user_id, password, site}
     def initialize(args={})
       @host = args[:host] || Tableau.host
-      @username = args[:username] || Tableau.username
-      @password = args[:password] || Tableau.password
+      @username = args[:admin_name] || Tableau.admin_name
+      @password = args[:admin_password] || Tableau.admin_password
       @site_name = args[:site_name] || "Default"
 
       setup_connection
@@ -20,7 +20,7 @@ module Tableau
     end
 
     def inspect
-      "<Tableau::Client @host=#{@host} @username=#{@username} @site_name=#{@site_name} @site_id=#{@site_id} @user=#{@user}>"
+      "<Tableau::Client @host=#{@host} @admin_name=#{@admin_name} @site_name=#{@site_name} @site_id=#{@site_id} @user=#{@user}>"
     end
 
     ##

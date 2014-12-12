@@ -1,7 +1,7 @@
 module Tableau
   module Util
     class Configuration
-      attr_accessor :host, :username, :password, :user_id, :site_name
+      attr_accessor :host, :admin_name, :admin_password, :user_name, :site_name
     end
   end
 end
