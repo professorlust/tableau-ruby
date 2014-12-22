@@ -31,30 +31,30 @@ module Tableau
     end
 
     def find_by(params={})
-      if params.include? :site_name && params[:site_name].nil? || params[:site_name].gsub(" ", "").empty?
+      if params.include? :name && params[:name].nil? || params[:name].gsub(" ", "").empty?
         return { error: "site name is missing." }.to_json
-      elsif params.include? :site_name && params[:site_id].nil? || params[:site_id].gsub(" ", "").empty?
+      elsif params.include? :id && params[:id].nil? || params[:id].gsub(" ", "").empty?
         return { error: "site id is missing." }.to_json
       end
       key = params.keys - [:include_projects]
       term = params[key[0]]
       resp = @client.conn.get "/api/2.0/sites/#{term}" do |req|
         req.params['includeProjects'] = params[:include_projects] || false
-        req.params["key"] = "name" if term == params[:site_name]
-        req.params["key"] = "contentUrl" if term == params[:site_url]
+        req.params["key"] = "name" if term == params[:name]
+        req.params["key"] = "contentUrl" if term == params[:url]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
       normalize_json(resp.body)
     end
 
     def create(site)
-      return { error: "site name is missing." }.to_json unless site[:site_name]
+      return { error: "site name is missing." }.to_json unless site[:name]
 
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
           xml.site(
-            name: site[:site_name] || 'New Site',
-            contentUrl: site[:content_url] || site[:site_name],
+            name: site[:name] || 'New Site',
+            contentUrl: site[:url] || site[:name],
             adminMode: site[:admin_mode] || 'ContentAndUsers',
             userQuota: site[:user_quota] || '100',
             storageQuota: site[:storage_quota] || '20',
@@ -75,7 +75,7 @@ module Tableau
     end
 
     def update(site)
-      return { error: "site_id is missing." }.to_json unless site[:site_id]
+      return { error: "site id is missing." }.to_json unless site[:id]
 
       case_dict = {
         name: "name",
@@ -87,7 +87,7 @@ module Tableau
       }
 
       site.each do |k,v|
-        next if k == :site_id
+        next if k == :id
         (@site ||= {}).store(case_dict[k],v)
       end
 
@@ -97,7 +97,7 @@ module Tableau
         end
       end
 
-      resp = @client.conn.put "/api/2.0/sites/#{site[:site_id]}" do |req|
+      resp = @client.conn.put "/api/2.0/sites/#{site[:id]}" do |req|
         req.body = builder.to_xml
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
@@ -106,9 +106,9 @@ module Tableau
     end
 
     def delete(site)
-      return { error: "site_id is missing." }.to_json unless site[:site_id]
+      return { error: "site id is missing." }.to_json unless site[:id]
 
-      resp = @client.conn.delete "/api/2.0/sites/#{site[:site_id]}" do |req|
+      resp = @client.conn.delete "/api/2.0/sites/#{site[:id]}" do |req|
         params.each {|k,v| req.params[k] = v}
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end

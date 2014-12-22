@@ -70,9 +70,9 @@ module Tableau
 
     def delete(project)
       return { error: "site_id is missing." }.to_json unless project[:site_id]
-      return { error: "project_id is missing." }.to_json unless project[:project_id]
+      return { error: "project id is missing." }.to_json unless project[:id]
 
-      resp = @client.conn.delete "/api/2.0/sites/#{project[:site_id]}/projects/#{project[:project_id]}" do |req|
+      resp = @client.conn.delete "/api/2.0/sites/#{project[:site_id]}/projects/#{project[:id]}" do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 

@@ -71,9 +71,9 @@ module Tableau
 
     def delete(user)
       return { error: "site_id is missing." }.to_json unless user[:site_id]
-      return { error: "user_id is missing." }.to_json unless user[:user_id]
+      return { error: "user id is missing." }.to_json unless user[:id]
 
-      resp = @client.conn.delete "/api/2.0/sites/#{user[:site_id]}/users/#{user[:user_id]}" do |req|
+      resp = @client.conn.delete "/api/2.0/sites/#{user[:site_id]}/users/#{user[:id]}" do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 

@@ -46,7 +46,7 @@ end
 	admin_password: 'your-admin-password'
 )
 
-@site = JSON.parse(@client.sites.find_by(site_name: 'Default'))['site']
+@site = JSON.parse(@client.sites.find_by(name: 'Default'))['site']
 
 @user = Tableau::User.new(@client, JSON.parse(@client.users.find_by(site_id: @site['id'], name: 'user-name'))['user'])
 @user.workbooks
@@ -60,10 +60,10 @@ end
 # add them by including include_projects: true
 @sites = client.sites.all(include_projects: true)
 
-@site = client.sites.find_by(site_id: 'string-id') # also try site_name and site_url
-@site = client.sites.create(name: 'Project Name')
-@site = client.sites.update(site_id: 'site-id')
-@site = client.sites.delete(site_id: 'site-id')
+@site = client.sites.find_by(id: 'site-id') # also try :name and :url
+@site = client.sites.create(name: 'Site Name')
+@site = client.sites.update(id: 'site-id')
+@site = client.sites.delete(id: 'site-id')
 
 ```
 
@@ -72,9 +72,9 @@ end
 
 @projects = @client.projects.all()
 
-@project = client.projects.create(site_id: 'project-site-id', name: 'Project Name')
-@project = client.projects.update(site_id: 'project-site-id', project_id: 'project-id')
-@project = client.projects.delete(site_id: 'project-site-id', project_id: 'project-id')
+@project = client.projects.create(name: 'Project Name', site_id: 'project-site-id')
+@project = client.projects.update(id: 'project-id', site_id: 'project-site-id')
+@project = client.projects.delete(id: 'project-id', site_id: 'project-site-id')
 
 ```
 
@@ -83,9 +83,9 @@ end
 
 @users = client.users.all(site_id: 'site-id')
 
-@user = client.users.find_by(site_id: 'site-id', name: 'user-name')
-@user = client.users.create(site_id: 'site-id', name: 'new user')
-@user = client.users.delete(site_id: 'site-id', user_id: 'user-id')
+@user = client.users.find_by(name: 'user-name', site_id: 'site-id')
+@user = client.users.create(name: 'new user', site_id: 'site-id')
+@user = client.users.delete(id: 'user-id', site_id: 'site-id')
 
 ```
 
@@ -94,7 +94,7 @@ end
 
 @workbooks = client.workbooks.all(site_id: 'site-id')
 
-@workbook = client.workbooks.find(site_id: 'site-id', workbook_id: 'workbook-id', include_views: true)
+@workbook = client.workbooks.find(id: 'workbook-id', site_id: 'site-id', include_views: true)
 
 ```
 

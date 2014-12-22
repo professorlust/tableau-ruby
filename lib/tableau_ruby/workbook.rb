@@ -9,6 +9,7 @@ module Tableau
 
     def all(params={})
       return { error: "site_id is missing." }.to_json if params[:site_id].nil? || params[:site_id].empty?
+      return { error: "user_id is missing." }.to_json if params[:user_id].nil? || params[:user_id].empty?
 
       resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users/#{params[:user_id]}/workbooks" do |req|
         req.params['getThumbnails'] = params[:include_images] if params[:include_images]
@@ -44,7 +45,7 @@ module Tableau
         end
 
         if params[:include_views]
-          workbook[:views] = include_views(site_id: params[:site_id], workbook_id: w['id'])
+          workbook[:views] = include_views(site_id: params[:site_id], id: w['id'])
         end
 
         data[:workbooks] << workbook
@@ -53,7 +54,7 @@ module Tableau
     end
 
     def find(workbook)
-      resp = @client.conn.get "/api/2.0/sites/#{workbook[:site_id]}/workbooks/#{workbook[:workbook_id]}" do |req|
+      resp = @client.conn.get "/api/2.0/sites/#{workbook[:site_id]}/workbooks/#{workbook[:id]}" do |req|
         req.params['previewImage'] = workbook[:preview_images] if workbook[:preview_images]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
@@ -64,7 +65,7 @@ module Tableau
         wkbk = {id: w["id"], name: w["name"], description: w['description']}
 
         if workbook[:include_views]
-          wkbk[:views] = include_views(site_id: workbook[:site_id], workbook_id: workbook[:workbook_id])
+          wkbk[:views] = include_views(site_id: workbook[:site_id], id: workbook[:id])
         end
 
         data[:workbook] = wkbk
@@ -77,7 +78,7 @@ module Tableau
     private
 
     def include_views(params)
-      resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{params[:workbook_id]}/views") do |req|
+      resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{params[:id]}/views") do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
