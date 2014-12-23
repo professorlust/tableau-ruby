@@ -96,6 +96,8 @@ end
 
 @workbook = client.workbooks.find(id: 'workbook-id', site_id: 'site-id', include_views: true)
 
+@workbook_image = client.workbooks.preview_image(id: 'workbook-id', site_id: 'site-id') # returns the binary image data.
+
 ```
 
 ## TODO

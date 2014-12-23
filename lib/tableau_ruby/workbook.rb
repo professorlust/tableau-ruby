@@ -72,7 +72,19 @@ module Tableau
       end
 
       data.to_json
+    end
 
+    # TODO: Refactor this is duplicate in all method. Also, there are many, many places that are begging to be DRYer.
+    def preview_image(workbook)
+      resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{workbook[:id]}/previewImage") do |req|
+        req.headers['X-Tableau-Auth'] = @client.token if @client.token
+      end
+
+      data = {}
+      data[:image] = Base64.encode64(resp.body)
+      data[:image_mime_type] = "image/png"
+
+      data.to_json
     end
 
     private
