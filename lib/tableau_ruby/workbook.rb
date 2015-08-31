@@ -13,6 +13,9 @@ module Tableau
 
       resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users/#{params[:user_id]}/workbooks" do |req|
         req.params['getThumbnails'] = params[:include_images] if params[:include_images]
+        req.params['isOwner'] = params[:is_owner] if params[:is_owner]
+        req.params['page-size'] = params[:page_size] if params[:page_size]
+        req.params['page-number'] = params[:page_number] if params[:page_number]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
@@ -26,7 +29,7 @@ module Tableau
       end
 
       doc.css("workbook").each do |w|
-        workbook = {id: w["id"], name: w["name"]}
+        workbook = {id: w["id"], name: w["name"], content_url: w["contentUrl"]}
 
         if params[:include_images]
           resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{w['id']}/previewImage") do |req|
@@ -62,7 +65,7 @@ module Tableau
       data = {workbook: {}}
       Nokogiri::XML(resp.body).css("workbook").each do |w|
 
-        wkbk = {id: w["id"], name: w["name"], description: w['description']}
+        wkbk = {id: w["id"], name: w["name"], content_url: w['contentUrl']}
 
         if workbook[:include_views]
           wkbk[:views] = include_views(site_id: workbook[:site_id], id: workbook[:id])
@@ -76,7 +79,7 @@ module Tableau
 
     # TODO: Refactor this is duplicate in all method. Also, there are many, many places that are begging to be DRYer.
     def preview_image(workbook)
-      resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{workbook[:id]}/previewImage") do |req|
+      resp = @client.conn.get("/api/2.0/sites/#{@client.site_id}/workbooks/#{workbook[:id]}/previewImage") do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
@@ -90,15 +93,18 @@ module Tableau
     private
 
     def include_views(params)
+
       resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{params[:id]}/views") do |req|
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
+      views = []
+
       Nokogiri::XML(resp.body).css("view").each do |v|
-        (@views ||= []) << {id: v['id'], name: v['name']}
+        views << {id: v['id'], name: v['name'], content_url: v['contentUrl']}
       end
 
-      @views
+      views
     end
 
   end
