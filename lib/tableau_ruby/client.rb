@@ -11,12 +11,13 @@ module Tableau
 
       setup_connection
 
-      @token = sign_in(args[:user_name])
+      @token = sign_in
       @site_id = get_site_id
 
-      setup_subresources
+      # Intentionally overwriting the token with the impersonated user's token
+      @token = sign_in(args[:user_name])
 
-      @user = Tableau::User.new(self, JSON.parse(@users.find_by(site_id: @site_id, name: args[:user_name]))['user']) if args.include? :user_name
+      setup_subresources
     end
 
     def inspect
@@ -65,7 +66,34 @@ module Tableau
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
           xml.credentials(name: @admin_name, password: @admin_password) do
-            xml.user(name: user) if user
+            xml.site(contentUrl: @site_name)
+          end
+        end
+      end
+
+      resp = @conn.post do |req|
+        req.url "/api/2.0/auth/signin"
+        req.body = builder.to_xml
+      end
+
+      if resp.status == 200
+        if user
+          @users = Tableau::Users.new(self)
+          @user = Tableau::User.new(self, JSON.parse(@users.find_by(site_id: @site_id, name: user))['user'])
+          impersonate(@user)
+        else
+          return Nokogiri::XML(resp.body).css("credentials").first[:token]
+        end
+      else
+        raise ArgumentError, Nokogiri::XML(resp.body)
+      end
+    end
+
+    def impersonate(user)
+      builder = Nokogiri::XML::Builder.new do |xml|
+        xml.tsRequest do
+          xml.credentials(name: @admin_name, password: @admin_password) do
+            xml.user(id: user.id) if user
             xml.site(contentUrl: @site_name)
           end
         end
