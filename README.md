@@ -93,7 +93,6 @@ end
 ``` ruby
 
 @workbooks = client.workbooks.all(site_id: 'site-id')
-@workbooks = client.workbooks.all(site_id: 'site-id', is_owner: boolean, page_size: 'page-size', page_number: 'page-number')
 
 @workbook = client.workbooks.find(id: 'workbook-id', site_id: 'site-id', include_views: true)
 
