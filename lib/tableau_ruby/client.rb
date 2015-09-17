@@ -1,3 +1,5 @@
+require 'uri'
+
 module Tableau
   class Client
     attr_reader :conn, :host, :admin_name, :projects, :sites, :site_id, :site_name, :token, :user, :users, :workbooks
@@ -7,7 +9,7 @@ module Tableau
       @host = args[:host] || Tableau.host
       @admin_name = args[:admin_name] || Tableau.admin_name
       @admin_password = args[:admin_password] || Tableau.admin_password
-      @site_name = args[:site_name] || "Default"
+      @site_name = args[:site_name] || ""
 
       setup_connection
 
@@ -15,7 +17,7 @@ module Tableau
       @site_id = get_site_id
 
       # Intentionally overwriting the token with the impersonated user's token
-      @token = sign_in(args[:user_name])
+      @token = sign_in(args[:user_name]) if args[:user_name]
 
       setup_subresources
     end
@@ -63,10 +65,11 @@ module Tableau
     end
 
     def sign_in(user=nil)
+
       builder = Nokogiri::XML::Builder.new do |xml|
         xml.tsRequest do
           xml.credentials(name: @admin_name, password: @admin_password) do
-            xml.site(contentUrl: @site_name)
+            xml.site(contentUrl: @site_name.gsub(' ', ''))
           end
         end
       end
@@ -94,7 +97,7 @@ module Tableau
         xml.tsRequest do
           xml.credentials(name: @admin_name, password: @admin_password) do
             xml.user(id: user.id) if user
-            xml.site(contentUrl: @site_name)
+            xml.site(contentUrl: @site_name.gsub(' ', ''))
           end
         end
       end
@@ -112,7 +115,7 @@ module Tableau
     end
 
     def get_site_id
-      resp = @conn.get "/api/2.0/sites/#{@site_name.gsub(' ', '%20')}" do |req|
+      resp = @conn.get "/api/2.0/sites/#{URI.encode(@site_name)}" do |req|
         req.params['key'] = 'name'
         req.headers['X-Tableau-Auth'] = @token if @token
       end

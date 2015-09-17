@@ -1,3 +1,5 @@
+require 'uri'
+
 module Tableau
   class Site
 
@@ -38,7 +40,7 @@ module Tableau
       end
       key = params.keys - [:include_projects]
       term = params[key[0]]
-      resp = @client.conn.get "/api/2.0/sites/#{term}" do |req|
+      resp = @client.conn.get "/api/2.0/sites/#{URI.encode(term)}" do |req|
         req.params['includeProjects'] = params[:include_projects] || false
         req.params["key"] = "name" if term == params[:name]
         req.params["key"] = "contentUrl" if term == params[:url]
