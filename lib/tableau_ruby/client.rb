@@ -115,13 +115,15 @@ module Tableau
     end
 
     def get_site_id
-      resp = @conn.get "/api/2.0/sites/#{URI.encode(@site_name)}" do |req|
+      resp = @conn.get "/api/2.0/sites/#{URI.encode(@site_name)}/" do |req|
         req.params['key'] = 'name'
         req.headers['X-Tableau-Auth'] = @token if @token
       end
 
       if resp.status == 200
         return Nokogiri::XML(resp.body).css("site").first[:id]
+      elsif resp.body.blank?
+        raise ArgumentError, resp.status
       else
         raise ArgumentError, Nokogiri::XML(resp.body).css("detail").text
       end
