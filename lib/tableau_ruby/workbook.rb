@@ -29,7 +29,7 @@ module Tableau
       end
 
       doc.css("workbook").each do |w|
-        workbook = {id: w["id"], name: w["name"], content_url: w["contentUrl"]}
+        workbook = {id: w["id"], name: w["name"], content_url: w["contentUrl"], tags: []}
 
         if params[:include_images]
           resp = @client.conn.get("/api/2.0/sites/#{params[:site_id]}/workbooks/#{w['id']}/previewImage") do |req|
