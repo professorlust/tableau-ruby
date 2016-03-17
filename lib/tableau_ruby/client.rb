@@ -83,7 +83,11 @@ module Tableau
         if user
           @users = Tableau::Users.new(self)
           @user = Tableau::User.new(self, JSON.parse(@users.find_by(site_id: @site_id, name: user))['user'])
-          impersonate(@user)
+          if @user.id
+            impersonate(@user)
+          else
+            return { error: "No user found" }.to_json
+          end
         else
           return Nokogiri::XML(resp.body).css("credentials").first[:token]
         end
