@@ -109,7 +109,7 @@ module Tableau
       data = {user: {}}
 
       if name
-        matched_user = Nokogiri::XML(r).css("user").select { |u| u['name'] == name }.first
+        matched_user = Nokogiri::XML(r).css("user").select { |u| u['name'].downcase == name.downcase }.first
       else
         matched_user = Nokogiri::XML(r).css("user")
       end
