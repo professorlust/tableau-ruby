@@ -14,8 +14,8 @@ module Tableau
       resp = @client.conn.get "/api/2.0/sites/#{params[:site_id]}/users/#{params[:user_id]}/workbooks" do |req|
         req.params['getThumbnails'] = params[:include_images] if params[:include_images]
         req.params['isOwner'] = params[:is_owner] if params[:is_owner]
-        req.params['page-size'] = params[:page_size] if params[:page_size]
-        req.params['page-number'] = params[:page_number] if params[:page_number]
+        req.params['pageSize'] = params[:page_size] if params[:page_size]
+        req.params['pageNumber'] = params[:page_number] if params[:page_number]
         req.headers['X-Tableau-Auth'] = @client.token if @client.token
       end
 
